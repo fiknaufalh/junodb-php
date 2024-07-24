@@ -8,31 +8,21 @@
     <h1>PHP JunoDB Example</h1>
 
     <?php
-    require 'junodb.php';
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $key = $_POST['key'];
+        // $config = new JunoConfig([
+        //     'application_name' => 'JunoTest',
+        //     'record_namespace' => 'JunoNS',
+        //     'server.host' => 'juno-server.example.com',
+        //     'server.port' => 8080,
+        //     // Konfigurasi lainnya
+        // ]);
+        
+        // $junoClient = JunoClientFactory::newJunoClient($config);
+        
+        // // Penggunaan
+        // $junoClient->set('key', 'value');
+        // $value = $junoClient->get('key');
 
-        if (isset($_POST['create'])) {
-            $value = $_POST['value'];
-            $response = create_data($key, $value);
-            echo "<p>Create Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['read'])) {
-            $response = read_data($key);
-            echo "<p>Read Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['update'])) {
-            $value = $_POST['value'];
-            $response = update_data($key, $value);
-            echo "<p>Update Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['set'])) {
-            $value = $_POST['value'];
-            $response = set_data($key, $value);
-            echo "<p>Set Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['delete'])) {
-            $response = delete_data($key);
-            echo "<p>Delete Response: " . json_encode($response) . "</p>";
-        }
-    }
     ?>
 
     <form method="post">
