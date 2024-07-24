@@ -17,9 +17,4 @@ services:
     container_name: php-fpm
     volumes:
       - ./www:/var/www/html
-
-  memcached:
-    image: memcached:latest
-    container_name: memcached
-    ports:
-      - "11211:11211"
+      

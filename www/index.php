@@ -12,14 +12,35 @@
             private $host;
             private $port;
             private $socket;
+            private $context;
 
-            public function __construct($host, $port) {
+            public function __construct($host, $port, $cafile, $certfile, $keyfile) {
                 $this->host = $host;
                 $this->port = $port;
+
+                // Create a stream context for TLS
+                $this->context = stream_context_create([
+                    'ssl' => [
+                        'cafile' => $cafile,
+                        'local_cert' => $certfile,
+                        'local_pk' => $keyfile,
+                        'verify_peer' => true,
+                        'verify_peer_name' => true,
+                        'allow_self_signed' => true, // Set to true using self-signed certificates for testing
+                    ]
+                ]);
             }
 
             private function connect() {
-                $this->socket = fsockopen($this->host, $this->port, $errno, $errstr, 30);
+                $this->socket = stream_socket_client(
+                    "tls://{$this->host}:{$this->port}", 
+                    $errno, 
+                    $errstr, 
+                    30, 
+                    STREAM_CLIENT_CONNECT, 
+                    $this->context
+                );
+
                 if (!$this->socket) {
                     throw new Exception("Could not connect to JunoDB: $errstr ($errno)");
                 }
@@ -71,11 +92,16 @@
             }
         }
 
-        $juno_server_host = '10.181.133.164';
+        $cafile = '/var/www/html/secrets/ca.crt';
+        $certfile = '/var/www/html/secrets/server.crt';
+        $keyfile = '/var/www/html/secret/server.pem';
+
+        // $juno_server_host = '10.181.133.164';
+        $juno_server_host = '172.20.0.5';
         $juno_server_port = 5080;
-        
+
         try {
-            $client = new JunoDBClient('juno-server-host', 5000);
+            $client = new JunoDBClient($juno_server_host, $juno_server_port, $cafile, $certfile, $keyfile);
             $client->create('testKey', 'testValue', 3600);
             echo "Key: testKey, Value [must be testValue]: ", $client->get('testKey');
             $client->update('testKey', 'newValue', 3600);
@@ -85,7 +111,8 @@
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
         }
-        ?>
+
+    ?>
 
 </body>
 </html>
