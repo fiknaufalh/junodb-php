@@ -8,45 +8,84 @@
     <h1>PHP JunoDB Example</h1>
 
     <?php
-    require 'junodb.php';
+        class JunoDBClient {
+            private $host;
+            private $port;
+            private $socket;
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $key = $_POST['key'];
+            public function __construct($host, $port) {
+                $this->host = $host;
+                $this->port = $port;
+            }
 
-        if (isset($_POST['create'])) {
-            $value = $_POST['value'];
-            $response = create_data($key, $value);
-            echo "<p>Create Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['read'])) {
-            $response = read_data($key);
-            echo "<p>Read Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['update'])) {
-            $value = $_POST['value'];
-            $response = update_data($key, $value);
-            echo "<p>Update Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['set'])) {
-            $value = $_POST['value'];
-            $response = set_data($key, $value);
-            echo "<p>Set Response: " . json_encode($response) . "</p>";
-        } elseif (isset($_POST['delete'])) {
-            $response = delete_data($key);
-            echo "<p>Delete Response: " . json_encode($response) . "</p>";
+            private function connect() {
+                $this->socket = fsockopen($this->host, $this->port, $errno, $errstr, 30);
+                if (!$this->socket) {
+                    throw new Exception("Could not connect to JunoDB: $errstr ($errno)");
+                }
+            }
+
+            private function disconnect() {
+                fclose($this->socket);
+            }
+
+            private function sendRequest($request) {
+                fwrite($this->socket, $request);
+                $response = '';
+                while (!feof($this->socket)) {
+                    $response .= fgets($this->socket, 128);
+                }
+                return $response;
+            }
+
+            public function create($key, $value, $ttl) {
+                $this->connect();
+                $request = "CREATE {$key} {$value} {$ttl}\n";
+                $response = $this->sendRequest($request);
+                $this->disconnect();
+                return $response;
+            }
+
+            public function get($key) {
+                $this->connect();
+                $request = "GET {$key}\n";
+                $response = $this->sendRequest($request);
+                $this->disconnect();
+                return $response;
+            }
+
+            public function update($key, $value, $ttl) {
+                $this->connect();
+                $request = "UPDATE {$key} {$value} {$ttl}\n";
+                $response = $this->sendRequest($request);
+                $this->disconnect();
+                return $response;
+            }
+
+            public function delete($key) {
+                $this->connect();
+                $request = "DELETE {$key}\n";
+                $response = $this->sendRequest($request);
+                $this->disconnect();
+                return $response;
+            }
         }
-    }
-    ?>
 
-    <form method="post">
-        <label for="key">Key:</label>
-        <input type="text" id="key" name="key" required>
-        <br>
-        <label for="value">Value:</label>
-        <input type="text" id="value" name="value">
-        <br>
-        <button type="submit" name="create">Create</button>
-        <button type="submit" name="read">Read</button>
-        <button type="submit" name="update">Update</button>
-        <button type="submit" name="set">Set</button>
-        <button type="submit" name="delete">Delete</button>
-    </form>
+        $juno_server_host = '10.181.133.164';
+        $juno_server_port = 5080;
+        
+        try {
+            $client = new JunoDBClient('juno-server-host', 5000);
+            $client->create('testKey', 'testValue', 3600);
+            echo "Key: testKey, Value [must be testValue]: ", $client->get('testKey');
+            $client->update('testKey', 'newValue', 3600);
+            echo "Key: testKey, (New) Value [must be newValue]: ", $client->get('testKey');
+            $client->delete('testKey');
+            echo "Key: testKey, Value [must be null/error]: ", $client->get('testKey');
+        } catch (Exception $e) {
+            echo "Error: " . $e->getMessage();
+        }
+        ?>
+
 </body>
 </html>
