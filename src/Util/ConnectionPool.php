@@ -37,7 +37,9 @@ class ConnectionPool {
             }
         }
 
-        $this->connectionUsage[spl_object_hash($leastBusyConnection)]++;
+        if ($leastBusyConnection !== null) {
+            $this->connectionUsage[spl_object_hash($leastBusyConnection)]++;
+        }
         return $leastBusyConnection;
     }
 
