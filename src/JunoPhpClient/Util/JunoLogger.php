@@ -19,7 +19,10 @@ class JunoLogger implements LoggerInterface {
             $message,
             json_encode($context)
         );
-        file_put_contents($this->logFile, $logEntry, FILE_APPEND);
+        
+        if (!@file_put_contents($this->logFile, $logEntry, FILE_APPEND)) {
+            error_log("Failed to write to log file: " . $this->logFile);
+        }
     }
 
     public function emergency(string|\Stringable $message, array $context = []): void {

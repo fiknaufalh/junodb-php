@@ -19,10 +19,27 @@ class JunoConnection {
     private function connect() {
         $host = $this->config->get('server.host');
         $port = $this->config->get('server.port');
-        $this->socket = @fsockopen($host, $port, $errno, $errstr, $this->config->get('connection.timeout_msec', 1000) / 1000);
+        $timeout = $this->config->get('connection_timeout', 5);
+
+        echo "JunoConnection: Attempting to connect to $host:$port with timeout $timeout seconds <br/>";
+
+        if (empty($host) || empty($port)) {
+            throw new JunoException("Invalid host or port configuration");
+        }
+
+        $this->socket = @stream_socket_client(
+            "tcp://$host:$port",
+            $errno,
+            $errstr,
+            $timeout
+        );
+
         if (!$this->socket) {
+            echo "JunoConnection: Failed to connect: $errstr ($errno)\n";
             throw new JunoException("Failed to connect to JunoDB server: $errstr ($errno)");
         }
+
+        echo "Successfully connected to JunoDB\n";
     }
 
     public function send($operation, $key, $value = null, $lifetime = null, $context = null) {

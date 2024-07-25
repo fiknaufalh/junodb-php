@@ -1,4 +1,9 @@
 {
+    "autoload": {
+        "psr-4": {
+            "JunoPhpClient\\": "src/JunoPhpClient/"
+        }
+    },
     "require": {
         "react/promise": "^3.2",
         "react/event-loop": "^1.5",

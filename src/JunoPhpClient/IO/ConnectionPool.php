@@ -31,6 +31,11 @@ class ConnectionPool {
 
         foreach ($this->connections as $connection) {
             $hash = spl_object_hash($connection);
+            
+            if (!isset($this->connectionUsage[$hash])) {
+                $this->connectionUsage[$hash] = 0;
+            }
+    
             if ($this->connectionUsage[$hash] < $leastUsage) {
                 $leastBusyConnection = $connection;
                 $leastUsage = $this->connectionUsage[$hash];
