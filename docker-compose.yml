@@ -1,25 +1,36 @@
 version: '3.8'
 
 services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: php
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - JUNO_HOST=proxy
+      - JUNO_PORT=8080
+    networks:
+      - appnetwork
+      - junonet
+
   nginx:
-    image: nginx:latest
+    image: nginx:alpine
     container_name: nginx
     ports:
-      - "80:80"
+      - "8082:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./www:/var/www/html
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - php-fpm
+      - php
+    networks:
+      - appnetwork
 
-  php-fpm:
-    build: .
-    container_name: php-fpm
-    volumes:
-      - ./www:/var/www/html
-
-  memcached:
-    image: memcached:latest
-    container_name: memcached
-    ports:
-      - "11211:11211"
+networks:
+  appnetwork:
+    driver: bridge
+  junonet:
+    external: true
+    name: ${DOCKER_NETWORK:-manifest_junonet}
