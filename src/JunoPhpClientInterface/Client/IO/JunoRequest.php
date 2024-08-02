@@ -59,4 +59,26 @@ enum OperationType: string
     case Update = 'UPDATE';
     case Set = 'SET';
     case Destroy = 'DESTROY';
+
+    public function getCode(): int
+    {
+        return match ($this) {
+            self::Create => 1,
+            self::Get => 2,
+            self::Update => 3,
+            self::Set => 4,
+            self::Destroy => 5,
+        };
+    }
+
+    public function getOpType(): string
+    {
+        return match ($this) {
+            self::Create => 'CREATE',
+            self::Get => 'GET',
+            self::Update => 'UPDATE',
+            self::Set => 'SET',
+            self::Destroy => 'DESTROY',
+        };
+    }
 }
